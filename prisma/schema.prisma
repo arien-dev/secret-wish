@@ -1,0 +1,229 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String               @id @default(cuid())
+  email         String               @unique
+  passwordHash  String
+  name          String
+  avatarUrl     String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  deletedAt     DateTime?
+
+  sessions      Session[]
+  resetTokens   PasswordResetToken[]
+  wishlists     Wishlist[]           @relation("UserWishlists")
+  familyMembers FamilyMember[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  sessionTokenHash String   @unique
+  expiresAt        DateTime
+  userAgent        String?
+  ipAddress        String?
+  createdAt        DateTime @default(now())
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionTokenHash])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+}
+
+model Family {
+  id         String         @id @default(cuid())
+  name       String
+  ownerId    String
+  inviteCode String         @unique
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  members    FamilyMember[]
+  wishlists  Wishlist[]
+
+  @@index([inviteCode])
+}
+
+enum FamilyRole {
+  OWNER
+  ADMIN
+  MEMBER
+  CHILD
+}
+
+model FamilyMember {
+  id        String     @id @default(cuid())
+  familyId  String
+  userId    String?
+  childName String?
+  role      FamilyRole @default(MEMBER)
+  createdAt DateTime   @default(now())
+
+  family    Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wishlists Wishlist[] @relation("ChildWishlists")
+
+  @@unique([familyId, userId])
+}
+
+enum Occasion {
+  BIRTHDAY
+  CHRISTMAS
+  BABY
+  WEDDING
+  MOVING
+  OTHER
+}
+
+model Wishlist {
+  id             String         @id @default(cuid())
+  ownerId        String
+  familyId       String?
+  childMemberId  String?
+  title          String
+  description    String?
+  occasion       Occasion       @default(OTHER)
+  eventDate      DateTime?
+  slug           String
+  shareTokenHash String         @unique
+  isPublic       Boolean        @default(false)
+  isArchived     Boolean        @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  owner          User           @relation("UserWishlists", fields: [ownerId], references: [id], onDelete: Cascade)
+  family         Family?        @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  childMember    FamilyMember?  @relation("ChildWishlists", fields: [childMemberId], references: [id], onDelete: SetNull)
+  items          WishlistItem[]
+  guests         Guest[]
+
+  @@index([ownerId])
+  @@index([shareTokenHash])
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  MUST_HAVE
+}
+
+model WishlistItem {
+  id           String        @id @default(cuid())
+  wishlistId   String
+  title        String
+  description  String?
+  url          String?
+  imageUrl     String?
+  price        Float?
+  currency     String        @default("EUR")
+  priority     Priority      @default(MEDIUM)
+  quantity     Int           @default(1)
+  variant      String?
+  note         String?
+  tags         String?
+  sortOrder    Int           @default(0)
+  isGroupGift  Boolean       @default(false)
+  targetAmount Float?
+  isReceived   Boolean       @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  wishlist     Wishlist      @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+
+  @@index([wishlistId])
+}
+
+enum ReservationStatus {
+  RESERVED
+  PURCHASED
+  DELIVERED
+  CANCELLED
+}
+
+model Reservation {
+  id             String            @id @default(cuid())
+  itemId         String
+  guestTokenHash String
+  amount         Float?
+  quantity       Int               @default(1)
+  status         ReservationStatus @default(RESERVED)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  item           WishlistItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([guestTokenHash])
+}
+
+model Guest {
+  id             String    @id @default(cuid())
+  wishlistId     String
+  displayName    String?
+  guestTokenHash String    @unique
+  createdAt      DateTime  @default(now())
+  lastSeenAt     DateTime  @default(now())
+
+  wishlist       Wishlist  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+
+  @@index([wishlistId])
+  @@index([guestTokenHash])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  targetType String
+  targetId   String
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([targetType, targetId])
+}
