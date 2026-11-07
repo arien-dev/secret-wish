@@ -10,15 +10,6 @@
   <em>Überraschungen bleiben erhalten – doppelte Geschenke werden vermieden.</em>
 </p>
 
-<p align="center">
-  <a href="#schnellstart-mit-docker">Schnellstart</a> •
-  <a href="#warum-secretwish">Warum SecretWish?</a> •
-  <a href="#funktionen">Funktionen</a> •
-  <a href="#datenschutz--zero-knowledge">Datenschutz</a> •
-  <a href="#architektur">Architektur</a> •
-  <a href="#deployment">Deployment</a> •
-  <a href="#lizenz">Lizenz</a>
-</p>
 
 ---
 
