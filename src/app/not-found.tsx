@@ -19,10 +19,10 @@ export default function NotFound() {
           </p>
         </div>
 
-        <Link href="/">
+        <Link href="/dashboard">
           <Button size="md" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            <span>Zur Startseite</span>
+            <span>Zur Übersicht</span>
           </Button>
         </Link>
       </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { LoginSchema } from "@/lib/validation/schemas";
 import { AuthService } from "@/server/services/auth.service";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
-import { getSessionCookieOptions } from "@/lib/auth/session";
+import { SESSION_COOKIE_NAME, getSessionCookieOptions } from "@/lib/auth/session";
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const response = NextResponse.json({ success: true, user });
 
     const cookieOpts = getSessionCookieOptions(expiresAt);
-    response.cookies.set(cookieOpts.name, sessionToken, cookieOpts);
+    response.cookies.set(SESSION_COOKIE_NAME, sessionToken, cookieOpts);
 
     return response;
   } catch (error: any) {

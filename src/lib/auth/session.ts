@@ -122,13 +122,13 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
  * Cookie options helper
  */
 export function getSessionCookieOptions(expiresAt: Date) {
+  const isHttps = process.env.APP_URL?.startsWith("https://") ?? false;
   return {
-    name: SESSION_COOKIE_NAME,
-    value: "",
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isHttps,
     sameSite: "lax" as const,
     path: "/",
     expires: expiresAt,
+    maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60,
   };
 }

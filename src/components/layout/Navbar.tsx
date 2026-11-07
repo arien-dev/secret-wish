@@ -40,7 +40,7 @@ export function Navbar({ user }: NavbarProps) {
     <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Brand */}
-        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 font-bold text-lg text-slate-900 dark:text-slate-100">
+        <Link href={user ? "/dashboard" : "/login"} className="flex items-center gap-2.5 font-bold text-lg text-slate-900 dark:text-slate-100">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-500/30">
             <Gift className="h-5 w-5" />
           </div>

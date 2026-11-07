@@ -48,10 +48,9 @@ export default function RegisterPage() {
 
       if (loginRes.ok) {
         success("Konto erfolgreich erstellt! Willkommen bei SecretWish.");
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
       } else {
-        router.push("/login");
+        window.location.href = "/login";
       }
     } catch (err: any) {
       setError(err.message);
