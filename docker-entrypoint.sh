@@ -4,7 +4,7 @@ set -e
 mkdir -p /app/data /app/public/uploads
 
 echo "[secretwish] Synchronizing database schema..."
-npx prisma db push
+npx prisma db push --accept-data-loss --skip-generate
 
 if [ "${SEED_DEMO:-false}" = "true" ]; then
   echo "[secretwish] Loading demo data (idempotent)..."
