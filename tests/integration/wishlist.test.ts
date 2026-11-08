@@ -35,7 +35,10 @@ describe("Wishlist & Items Integration Flow", () => {
     expect(list.id).toBeDefined();
     expect(list.title).toBe("Mein Sommerfest 2026");
     expect(list.shareToken).toBeDefined();
-    expect(list.shareToken.length).toBeGreaterThan(20);
+    // Share-Slug muss URL-sicher sein: 3-40 Zeichen, nur a-z, 0-9 und Bindestriche
+    expect(list.shareToken.length).toBeGreaterThanOrEqual(3);
+    expect(list.shareToken.length).toBeLessThanOrEqual(40);
+    expect(list.shareToken).toMatch(/^[a-z0-9-]+$/);
 
     wishlistId = list.id;
     rawShareToken = list.shareToken;
@@ -82,5 +85,37 @@ describe("Wishlist & Items Integration Flow", () => {
     await WishlistService.restoreWishlist(wishlistId, userId);
     const restoredList = await prisma.wishlist.findUnique({ where: { id: wishlistId } });
     expect(restoredList?.deletedAt).toBeNull();
+  });
+
+  it("should set a custom slug and reject a duplicate slug", async () => {
+    // Erstelle eine zweite Liste für den Kollisionstest
+    const user2 = await AuthService.register({
+      name: "Collision Tester 2",
+      email: "collision-test-2@secretwish.local",
+      password: "TestPassword123!",
+    });
+
+    const listA = await WishlistService.createWishlist(userId, {
+      title: "Liste A",
+      occasion: "OTHER",
+    });
+    await WishlistService.setCustomSlug(listA.id, userId, "mein-slug-test");
+
+    const listB = await WishlistService.createWishlist(user2.id, {
+      title: "Liste B",
+      occasion: "OTHER",
+    });
+
+    // Eigener Slug auf Liste A funktioniert
+    const updatedA = await WishlistService.setCustomSlug(listA.id, userId, "mein-neuer-slug");
+    expect(updatedA.slug).toBe("mein-neuer-slug");
+
+    // Doppelter Slug von Liste B auf Liste A setzen -> Konflikt
+    await expect(
+      WishlistService.setCustomSlug(listB.id, user2.id, "mein-neuer-slug"),
+    ).rejects.toThrow(/bereits vergeben/);
+
+    // Aufräumen
+    await prisma.user.deleteMany({ where: { email: "collision-test-2@secretwish.local" } });
   });
 });

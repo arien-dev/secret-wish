@@ -42,8 +42,10 @@ Fertig! Öffne **`http://localhost:3000`** in deinem Browser.
 
 > [!TIP]
 > **Demo-Daten einspielen:**  
-> Du kannst mit `docker compose exec secretwish npm run db:seed` Beispieldaten erzeugen.  
-> Anmeldedaten: `demo@secretwish.local` / `SecretWish123!`
+> Starte den Container mit `SEED_DEMO=true` (z.B. in der `.env` oder über `docker compose`), dann werden Demo-Daten idempotent eingespielt:
+> `SEED_DEMO=true docker compose up -d`  
+> Anmeldedaten: `demo@secretwish.local` / `SecretWish123!`  
+> Ohne `SEED_DEMO=true` wird die Datenbank nur synchronisiert, aber nicht mit Beispieldaten befüllt.
 
 ---
 
@@ -133,6 +135,7 @@ Ausführliche Architekturbeschreibung: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.
 | `SMTP_PORT` | *(Optional)* SMTP Port | `587` |
 | `SMTP_USER` | *(Optional)* SMTP Benutzer | `""` |
 | `SMTP_PASSWORD`| *(Optional)* SMTP Passwort | `""` |
+| `SEED_DEMO` | Demo-Daten beim Container-Start einspielen (idempotent) | `false` |
 
 ---
 
@@ -163,6 +166,52 @@ Alle 34 Tests decken ab:
 - Race-Condition-Verhalten bei gleichzeitigen Reservierungen
 - Gruppengeschenk-Fortschritt & Überbuchungsschutz
 - Rate Limiting
+
+## 🐳 Docker & Produktion
+
+### Schnellstart (Docker Compose)
+
+```bash
+git clone https://github.com/secretwish/secretwish.git
+cd secretwish
+cp .env.example .env
+# Optional: Demo-Daten aktivieren
+# echo 'SEED_DEMO=true' >> .env
+docker compose up -d
+```
+
+Öffne **`http://localhost:3000`**.
+
+### Manueller Start (docker run)
+
+```bash
+docker run -d \
+  --name secretwish \
+  -p 3000:3000 \
+  -e SESSION_SECRET="$(openssl rand -hex 32)" \
+  -e SEED_DEMO=false \
+  -v secretwish_data:/app/data \
+  -v secretwish_uploads:/app/public/uploads \
+  ariendev/secretwish:latest
+```
+
+Daten und Uploads bleiben über die Named Volumes `secretwish_data` und `secretwish_uploads` erhalten.
+
+### Datenbank-Sync & Seeding
+
+Der Container führt vor dem Start automatisch `prisma db push` aus. Demo-Daten laufen nur mit `SEED_DEMO=true` und sind idempotent (keine Duplikate bei Wiederholung).
+
+```bash
+# Manuell DB-Sync wiederholen
+docker compose exec secretwish npx prisma db push
+
+# Manuell Demo-Daten einspielen (idempotent)
+docker compose exec secretwish SEED_DEMO=true npx prisma db seed
+```
+
+### Gesundheitscheck
+
+Der Container stellt einen Healthcheck auf `http://127.0.0.1:3000/` bereit (alle 30s).
 
 ---
 

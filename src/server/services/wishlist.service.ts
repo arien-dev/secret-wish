@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import { generateSecureToken, hashToken, slugify } from "@/lib/crypto";
+import { generateSecureToken, hashToken, slugify, generateSecureSlug } from "@/lib/crypto";
 
 export interface CreateWishlistInput {
   title: string;
@@ -217,27 +217,46 @@ export class WishlistService {
   static async createWishlist(userId: string, data: CreateWishlistInput) {
     const rawShareToken = generateSecureToken(24);
     const shareTokenHash = hashToken(rawShareToken);
-    const slug = slugify(data.title) || "liste";
 
-    const wishlist = await prisma.wishlist.create({
-      data: {
-        ownerId: userId,
-        title: data.title.trim(),
-        description: data.description?.trim() || null,
-        occasion: data.occasion || "OTHER",
-        eventDate: data.eventDate ? new Date(data.eventDate) : null,
-        slug,
-        shareTokenHash,
-        isPublic: data.isPublic ?? false,
-        familyId: data.familyId || null,
-        childMemberId: data.childMemberId || null,
-      },
-    });
+    let slug: string | null = null;
+    let attempts = 0;
+    while (!slug && attempts < 5) {
+      attempts++;
+      const candidate = generateSecureSlug(10);
+      try {
+        const wishlist = await prisma.wishlist.create({
+          data: {
+            ownerId: userId,
+            title: data.title.trim(),
+            description: data.description?.trim() || null,
+            occasion: data.occasion || "OTHER",
+            eventDate: data.eventDate ? new Date(data.eventDate) : null,
+            slug: candidate,
+            shareTokenHash,
+            isPublic: data.isPublic ?? false,
+            familyId: data.familyId || null,
+            childMemberId: data.childMemberId || null,
+          },
+        });
+        slug = candidate;
+        return {
+          ...wishlist,
+          shareToken: candidate, // stabile, öffentliche Slug-URL: /share/<slug>
+        };
+      } catch (error: any) {
+        // P2002 = unique constraint violation on slug
+        if (error.code === "P2002" && error.meta?.target?.includes("slug")) {
+          continue; // Kollision -> neuen Slug versuchen
+        }
+        throw error;
+      }
+    }
 
-    return {
-      ...wishlist,
-      shareToken: rawShareToken, // Plaintext token returned only upon creation or token regeneration
-    };
+    if (!slug) {
+      throw new Error("Konnte keinen eindeutigen Link-Slug generieren.");
+    }
+
+    return null;
   }
 
   static async updateWishlist(wishlistId: string, userId: string, data: UpdateWishlistInput) {
@@ -317,12 +336,34 @@ export class WishlistService {
 
     const newRawToken = generateSecureToken(24);
     const newShareTokenHash = hashToken(newRawToken);
+    const newSlug = generateSecureSlug(10);
 
     await prisma.wishlist.update({
       where: { id: wishlistId },
-      data: { shareTokenHash: newShareTokenHash },
+      data: { shareTokenHash: newShareTokenHash, slug: newSlug },
     });
 
-    return { shareToken: newRawToken };
+    return { shareToken: newSlug };
+  }
+
+  static async setCustomSlug(wishlistId: string, userId: string, slug: string) {
+    const wishlist = await prisma.wishlist.findFirst({
+      where: { id: wishlistId, ownerId: userId },
+    });
+
+    if (!wishlist) {
+      throw new Error("Wunschliste nicht gefunden oder keine Berechtigung.");
+    }
+
+    // Slug darf nicht von einem anderen Wishlist belegt sein
+    const existing = await prisma.wishlist.findUnique({ where: { slug } });
+    if (existing && existing.id !== wishlistId) {
+      throw new Error("Dieser Link-Name ist bereits vergeben. Bitte wähle einen anderen.");
+    }
+
+    return await prisma.wishlist.update({
+      where: { id: wishlistId },
+      data: { slug },
+    });
   }
 }

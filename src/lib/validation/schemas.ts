@@ -126,3 +126,40 @@ export const JoinFamilySchema = z.object({
 export const CreateChildProfileSchema = z.object({
   childName: z.string().min(2, "Name des Kindes ist erforderlich.").max(100),
 });
+
+// ==========================================
+// SHARE SLUG SCHEMAS
+// ==========================================
+
+const RESERVED_SLUGS = new Set([
+  "admin","api","login","register","logout","share","dashboard","wishlists","wishlist",
+  "items","item","families","family","public","me","session","sessions","upload","uploads",
+  "notification","notifications","_next","static","favicon.ico","sitemap.xml","robots.txt",
+  "settings","profile","reset-password","forgot-password","auth","health","manifest",
+  "sw.js","service-worker","create","new","edit","delete",
+]);
+
+const OFFENSIVE_SLUGS = new Set([
+  "nigga","nigger","nazi","hitler","fuck","shit","cunt","twat","bitch","bastard",
+  "faggot","fag","dyke","tranny","retard","kike","spic","chink","gook","gypo",
+  "wog","coon","wetback","honkey","cracker","redneck","hillbilly","degenerate",
+]);
+
+export const CustomSlugSchema = z
+  .string()
+  .min(3, "Der Link muss mindestens 3 Zeichen lang sein.")
+  .max(40, "Der Link darf maximal 40 Zeichen lang sein.")
+  .regex(/^[a-z0-9-]+$/, "Nur Kleinbuchstaben, Zahlen und Bindestriche sind erlaubt.")
+  .refine((v) => !v.startsWith("-") && !v.endsWith("-") && !v.includes("--"), {
+    message: "Bindestriche dürfen nicht am Anfang/Ende stehen und nicht doppelt vorkommen.",
+  })
+  .refine((v) => !RESERVED_SLUGS.has(v), {
+    message: "Dieser Link-Name ist reserviert und darf nicht verwendet werden.",
+  })
+  .refine((v) => !OFFENSIVE_SLUGS.has(v.toLowerCase()), {
+    message: "Dieser Link-Name ist nicht zulässig.",
+  });
+
+// ==========================================
+// PUBLIC & RESERVATION SCHEMAS
+// ==========================================

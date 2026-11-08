@@ -57,7 +57,7 @@ export function Modal({
       {/* Modal Dialog */}
       <div
         className={cn(
-          "relative z-10 w-full overflow-hidden rounded-2xl bg-white p-6 shadow-2xl transition-all dark:bg-slate-900 border border-slate-200 dark:border-slate-800",
+          "relative z-10 w-full overflow-hidden rounded-xl bg-white p-6 shadow-md transition-all glass dark:border dark:border-white/10 dark:bg-white/5",
           maxWidths[maxWidth],
           className
         )}
