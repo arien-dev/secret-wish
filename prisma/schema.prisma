@@ -109,7 +109,7 @@ model Wishlist {
   description    String?
   occasion       Occasion       @default(OTHER)
   eventDate      DateTime?
-  slug           String
+  slug           String         @unique
   shareTokenHash String         @unique
   isPublic       Boolean        @default(false)
   isArchived     Boolean        @default(false)

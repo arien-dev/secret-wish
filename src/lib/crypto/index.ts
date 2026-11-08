@@ -29,6 +29,20 @@ export function hashToken(token: string): string {
 }
 
 /**
+ * Generates a short, URL-safe, random share slug (lowercase alphanumeric).
+ * Default length 10 => ~36^10 combinations, unguessable and stable.
+ */
+export function generateSecureSlug(length: number = 10): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const randomBytes = crypto.randomBytes(length);
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars[randomBytes[i] % chars.length];
+  }
+  return result;
+}
+
+/**
  * Converts a title into a URL-friendly slug.
  */
 export function slugify(text: string): string {

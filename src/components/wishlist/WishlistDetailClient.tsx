@@ -37,7 +37,7 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareToken, setShareToken] = useState<string>(initialWishlist.shareToken || "");
+  const [shareToken, setShareToken] = useState<string>(initialWishlist.slug || "");
 
   // Filters
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
@@ -146,7 +146,7 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
       <div>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-text dark:text-muted dark:hover:text-dark-text transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Zurück zu meinen Listen
@@ -154,7 +154,7 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
       </div>
 
       {/* Header Banner */}
-      <div className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-sm dark:border-dark-border dark:bg-dark-surface flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-3 max-w-2xl">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="default" className="text-xs font-bold uppercase tracking-wider">
@@ -162,30 +162,30 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
             </Badge>
 
             {wishlist.childMember?.childName && (
-              <Badge variant="warning" className="text-xs flex items-center gap-1">
+              <Badge variant="accent" className="text-xs flex items-center gap-1">
                 <Sparkles className="h-3 w-3" /> Für {wishlist.childMember.childName}
               </Badge>
             )}
 
             {wishlist.eventDate && (
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                <Calendar className="h-3.5 w-3.5 text-slate-400" />
+              <div className="flex items-center gap-1.5 text-xs text-muted dark:text-dark-muted">
+                <Calendar className="h-3.5 w-3.5 text-muted" />
                 <span>{formatDate(wishlist.eventDate)}</span>
               </div>
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-text">
             {wishlist.title}
           </h1>
 
           {wishlist.description && (
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-muted dark:text-dark-muted leading-relaxed">
               {wishlist.description}
             </p>
           )}
 
-          <div className="pt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="pt-1 flex items-center gap-2 text-xs text-muted dark:text-dark-muted">
             <Lock className="h-3.5 w-3.5 text-emerald-500" />
             <span>Zero-Knowledge: Du siehst niemals, wer etwas reserviert hat.</span>
           </div>
@@ -234,7 +234,7 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
 
       {/* Filter and count bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <div className="flex items-center gap-2 text-xs font-semibold text-muted">
           <Filter className="h-3.5 w-3.5 text-violet-500" />
           <span>{filteredItems.length} {filteredItems.length === 1 ? "Wunsch" : "Wünsche"}</span>
         </div>
@@ -244,7 +244,7 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
           <select
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
-            className="h-8 px-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            className="h-8 px-2.5 rounded-xl border border-border bg-surface text-xs text-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
           >
             <option value="ALL">Alle Prioritäten</option>
             <option value="MUST_HAVE">Highlights ★</option>
@@ -257,7 +257,7 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="h-8 px-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            className="h-8 px-2.5 rounded-xl border border-border bg-surface text-xs text-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
           >
             <option value="ALL">Alle Status</option>
             <option value="OPEN">Nur noch offene</option>
@@ -269,15 +269,15 @@ export function WishlistDetailClient({ initialWishlist, currentUserId }: Wishlis
 
       {/* Items Grid */}
       {filteredItems.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900 space-y-4">
+        <div className="rounded-3xl border border-dashed border-border bg-surface p-12 text-center dark:border-dark-border dark:bg-dark-surface space-y-4">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
             <Plus className="h-6 w-6" />
           </div>
           <div className="max-w-md mx-auto space-y-1">
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <h3 className="text-base font-bold text-text">
               {items.length === 0 ? "Noch keine Wünsche auf dieser Liste" : "Keine Wünsche für diesen Filter"}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-muted">
               {items.length === 0
                 ? "Füge deinen ersten Wunsch hinzu – mit Titel, Link, Preis und Bild."
                 : "Passe die Filtereinstellungen an, um deine Wünsche zu sehen."}

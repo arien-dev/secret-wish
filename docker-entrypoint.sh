@@ -1,13 +1,17 @@
 #!/bin/sh
 set -e
 
-# Ensure data and upload directories exist
 mkdir -p /app/data /app/public/uploads
 
-# Run Prisma schema push for SQLite
-echo "Synchronizing database schema..."
-npx prisma db push --skip-generate
+echo "[secretwish] Synchronizing database schema..."
+npx prisma db push
 
-# Start the application
-echo "Starting SecretWish application..."
-exec "$@"
+if [ "${SEED_DEMO:-false}" = "true" ]; then
+  echo "[secretwish] Loading demo data (idempotent)..."
+  npx prisma db seed
+else
+  echo "[secretwish] Demo seeding skipped (set SEED_DEMO=true to enable)."
+fi
+
+echo "[secretwish] Starting SecretWish production server..."
+exec node server.js

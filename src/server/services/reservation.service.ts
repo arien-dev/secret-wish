@@ -3,12 +3,12 @@ import { hashToken } from "@/lib/crypto";
 
 export class ReservationService {
   /**
-   * Helper to look up a wishlist by raw share token
+   * Helper to look up a wishlist by its public share slug.
+   * Slugs are stable and unique: /share/<slug>
    */
-  private static async getWishlistByToken(rawShareToken: string) {
-    const shareTokenHash = hashToken(rawShareToken);
+  private static async getWishlistByToken(rawShareSlug: string) {
     const wishlist = await prisma.wishlist.findUnique({
-      where: { shareTokenHash },
+      where: { slug: rawShareSlug },
       include: {
         owner: {
           select: { name: true, avatarUrl: true },
